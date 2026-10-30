@@ -16,8 +16,12 @@ import org.geysermc.geyser.api.entity.property.GeyserEntityProperty;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineCommandsEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineEntitiesEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineEntityPropertiesEvent;
+import org.geysermc.geyser.api.event.lifecycle.GeyserDefineResourcePacksEvent;
 import org.geysermc.geyser.api.event.lifecycle.GeyserPreInitializeEvent;
 import org.geysermc.geyser.api.extension.Extension;
+import org.geysermc.geyser.api.pack.PackCodec;
+import org.geysermc.geyser.api.pack.ResourcePack;
+import org.geysermc.geyser.api.pack.option.ResourcePackOption;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.entity.*;
@@ -27,8 +31,10 @@ import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.MetadataTyp
 import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 
 public class GeyserDisplayEntity implements Extension {
@@ -45,6 +51,8 @@ public class GeyserDisplayEntity implements Extension {
 
     public static final Integer MAX_VALUE = 1000000;
     public static final Integer MIN_VALUE = -1000000;
+
+    private static final String PACK_FILE = "GeyserDisplayEntityPack.mcpack";
 
     @Subscribe
     public void onLoad(GeyserPreInitializeEvent event) {
@@ -156,6 +164,22 @@ public class GeyserDisplayEntity implements Extension {
         }
 
         logger().info("Done");
+    }
+
+    @Subscribe
+    public void onDefineResourcePacks(GeyserDefineResourcePacksEvent event) {
+        Path pack = dataFolder().resolve(PACK_FILE);
+        try (InputStream bundled = getClass().getClassLoader().getResourceAsStream(PACK_FILE)) {
+            if (bundled == null) {
+                logger().error(PACK_FILE + " is missing from the jar; displays won't render on Bedrock");
+                return;
+            }
+            Files.createDirectories(dataFolder());
+            Files.copy(bundled, pack, StandardCopyOption.REPLACE_EXISTING);
+            event.register(ResourcePack.create(PackCodec.path(pack)), new ResourcePackOption<?>[0]);
+        } catch (IOException err) {
+            logger().error("Couldn't register " + PACK_FILE, err);
+        }
     }
 
     @Subscribe
