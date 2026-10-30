@@ -26,6 +26,10 @@ public class ConfigManager {
 
     private boolean forceCube = false;
 
+    private boolean drawItemDisplays = true;
+    private boolean drawBlockDisplays = true;
+    private boolean drawItemFrames = false;
+
     public ConfigManager(GeyserDisplayEntity extension) {
         this.extension = extension;
 
@@ -44,6 +48,10 @@ public class ConfigManager {
         this.logDisplays = config.getBoolean("settings.debug.log-displays");
 
         this.forceCube = config.getBoolean("block-displays.force-cube");
+
+        this.drawItemDisplays = !config.contains("draw.item-displays") || config.getBoolean("draw.item-displays");
+        this.drawBlockDisplays = !config.contains("draw.block-displays") || config.getBoolean("draw.block-displays");
+        this.drawItemFrames = config.getBoolean("draw.item-frames");
 
         if (!Files.exists(GeyserDisplayEntity.getExtension().dataFolder().resolve("Entities"))) {
             FileUtils.createFiles(GeyserDisplayEntity.getExtension(), "Entities/item-displays.yml");
@@ -131,5 +139,17 @@ public class ConfigManager {
     // Whether plain blocks use the block cube too, instead of a falling block
     public boolean isForceCube() {
         return forceCube;
+    }
+
+    public boolean isDrawItemDisplays() {
+        return drawItemDisplays;
+    }
+
+    public boolean isDrawBlockDisplays() {
+        return drawBlockDisplays;
+    }
+
+    public boolean isDrawItemFrames() {
+        return drawItemFrames;
     }
 }

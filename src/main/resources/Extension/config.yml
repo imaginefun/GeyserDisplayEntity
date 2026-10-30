@@ -1,3 +1,10 @@
+# Which Java entities this extension draws on Bedrock. Changes need a restart.
+draw:
+  item-displays: true
+  block-displays: true
+  # Furniture in item frames, drawn as 3D models (needs display_transforms.json, see the README)
+  item-frames: false
+
 # General display options
 general:
   # The height of display entity

@@ -56,7 +56,7 @@ public class GeyserDisplayEntity implements Extension {
         } catch (IOException err) {
             logger().error("Couldn't load the block renderer's shapes; block displays fall back to falling blocks", err);
         }
-        loadDisplayTransforms();
+        if (configManager.isDrawItemFrames()) loadDisplayTransforms();
     }
 
     // Written by the Bedrock converter next to the item mappings; copy it into the extension's folder
@@ -132,23 +132,25 @@ public class GeyserDisplayEntity implements Extension {
                     .addTranslator(MetadataTypes.BYTE, ItemDisplayEntity::setDisplayType)
                     .build();
 
-            EntityUtils.replaceJavaDefinition(EntityType.BLOCK_DISPLAY, BLOCK_DISPLAY);
-            EntityUtils.replaceJavaDefinition(EntityType.ITEM_DISPLAY, ITEM_DISPLAY);
+            if (configManager.isDrawBlockDisplays()) EntityUtils.replaceJavaDefinition(EntityType.BLOCK_DISPLAY, BLOCK_DISPLAY);
+            if (configManager.isDrawItemDisplays()) EntityUtils.replaceJavaDefinition(EntityType.ITEM_DISPLAY, ITEM_DISPLAY);
+            logger().info("Drawing item displays: " + configManager.isDrawItemDisplays() + ", block displays: " + configManager.isDrawBlockDisplays() + ", item frames: " + configManager.isDrawItemFrames());
 
-            // Item frames keep Geyser's behaviour, except invisible ones holding furniture, which draw its model
-            EntityUtils.replaceJavaDefinition(EntityType.ITEM_FRAME, VanillaEntityType.inherited(FurnitureFrameEntity::new, VanillaEntities.ITEM_FRAME)
-                    .type(EntityType.ITEM_FRAME)
-                    // Geyser has already registered item frames; build(false) skips its registries and
-                    // replaceJavaDefinition swaps this one in
-                    .bedrockDefinition(VanillaEntities.ITEM_FRAME.defaultBedrockDefinition())
-                    .build(false));
-            EntityUtils.replaceJavaDefinition(EntityType.GLOW_ITEM_FRAME, VanillaEntityType.inherited(FurnitureFrameEntity::new, VanillaEntities.GLOW_ITEM_FRAME)
-                    .type(EntityType.GLOW_ITEM_FRAME)
-                    // Geyser has already registered item frames; build(false) skips its registries and
-                    // replaceJavaDefinition swaps this one in
-                    .bedrockDefinition(VanillaEntities.GLOW_ITEM_FRAME.defaultBedrockDefinition())
-                    .build(false));
-            logger().info("Item frames draw furniture in invisible frames");
+            if (configManager.isDrawItemFrames()) {
+                // Item frames keep Geyser's behaviour, except invisible ones holding furniture, which draw its model
+                EntityUtils.replaceJavaDefinition(EntityType.ITEM_FRAME, VanillaEntityType.inherited(FurnitureFrameEntity::new, VanillaEntities.ITEM_FRAME)
+                        .type(EntityType.ITEM_FRAME)
+                        // Geyser has already registered item frames; build(false) skips its registries and
+                        // replaceJavaDefinition swaps this one in
+                        .bedrockDefinition(VanillaEntities.ITEM_FRAME.defaultBedrockDefinition())
+                        .build(false));
+                EntityUtils.replaceJavaDefinition(EntityType.GLOW_ITEM_FRAME, VanillaEntityType.inherited(FurnitureFrameEntity::new, VanillaEntities.GLOW_ITEM_FRAME)
+                        .type(EntityType.GLOW_ITEM_FRAME)
+                        // Geyser has already registered item frames; build(false) skips its registries and
+                        // replaceJavaDefinition swaps this one in
+                        .bedrockDefinition(VanillaEntities.GLOW_ITEM_FRAME.defaultBedrockDefinition())
+                        .build(false));
+            }
         } catch (Throwable err) {
             logger().error("Error in load", err);
         }
@@ -166,7 +168,7 @@ public class GeyserDisplayEntity implements Extension {
                 .permission("geyserdisplayentity.commands.reload")
                 .executor((source, command, args) -> {
                     configManager.load();
-                    loadDisplayTransforms();
+                    if (configManager.isDrawItemFrames()) loadDisplayTransforms();
                     refreshDisplays();
                     source.sendMessage(configManager.getLang().getString("commands.geyserdisplayentity.reload.successfully-reloaded"));
                 })
