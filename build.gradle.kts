@@ -3,22 +3,19 @@ plugins {
     id("com.gradleup.shadow") version "9.6.1"
 }
 
-group = "net.sunnysmp"
+group = "net.imaginefun"
 version = "1.0.14"
 
 repositories {
     mavenCentral()
-
-    maven("https://repo.sunnyinfra.cloud/development/") {
-        name = "SunnyInfra"
-        credentials(PasswordCredentials::class)
-    }
     maven("https://repo.opencollab.dev/main/")
 }
 
+// Compiles against the Geyser standalone jar we run, which bundles the api and core
+val geyserJar = providers.gradleProperty("geyserJar").orElse("${System.getProperty("user.home")}/Documents/code/imaginefun/resources/imaginefun/templates/geyser/geyser.jar")
+
 dependencies {
-    compileOnly("net.sunnysmp.geyser:core:2.12.0-SNAPSHOT")
-    compileOnly("net.sunnysmp.geyser:api:2.12.0-SNAPSHOT")
+    compileOnly(files(geyserJar))
 
     implementation("org.spongepowered:configurate-yaml:4.2.0-GeyserMC-SNAPSHOT")
 }
@@ -48,4 +45,5 @@ tasks.processResources {
     filesMatching("extension.yml") {
         expand(props)
     }
+    from("packs/GeyserDisplayEntityPack.mcpack")
 }
