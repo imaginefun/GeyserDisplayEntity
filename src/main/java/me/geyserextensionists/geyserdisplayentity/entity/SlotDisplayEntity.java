@@ -112,6 +112,8 @@ public class SlotDisplayEntity extends Entity {
 
     protected void pushTranslationProperties() {
         Vector3f t = this.translation.add(displayTranslation).add(modelOffset());
+        // Java translates before scaling, but the entity's own scale also scales the rig's translation
+        if (config != null && config.getBoolean("vanilla-scale") && uniformScale() != 0) t = t.div(uniformScale());
         propertyManager.addProperty(new FloatProperty(Identifier.of("geyser:t_x"), MAX_VALUE, MIN_VALUE, 0F), t.getX() * 10);
         propertyManager.addProperty(new FloatProperty(Identifier.of("geyser:t_y"), MAX_VALUE, MIN_VALUE, 0F), t.getY() * 10);
         propertyManager.addProperty(new FloatProperty(Identifier.of("geyser:t_z"), MAX_VALUE, MIN_VALUE, 0F), t.getZ() * 10);
@@ -134,11 +136,18 @@ public class SlotDisplayEntity extends Entity {
     public void setScale(EntityMetadata<Vector3f, ?> entityMetadata) {
         this.scale = entityMetadata.getValue();
 
-        if (config != null && config.getBoolean("vanilla-scale")) applyScale();
+        boolean vanillaScale = config != null && config.getBoolean("vanilla-scale");
+        if (vanillaScale) applyScale();
 
-        propertyManager.addProperty(new FloatProperty(Identifier.of("geyser:s_x"), MAX_VALUE, MIN_VALUE, 0F), scale.getX());
-        propertyManager.addProperty(new FloatProperty(Identifier.of("geyser:s_y"), MAX_VALUE, MIN_VALUE, 0F), scale.getY());
-        propertyManager.addProperty(new FloatProperty(Identifier.of("geyser:s_z"), MAX_VALUE, MIN_VALUE, 0F), scale.getZ());
+        // The entity's own scale already covers it; scaling the rig too would apply it twice
+        Vector3f rigScale = vanillaScale ? Vector3f.ONE : scale;
+        propertyManager.addProperty(new FloatProperty(Identifier.of("geyser:s_x"), MAX_VALUE, MIN_VALUE, 0F), rigScale.getX());
+        propertyManager.addProperty(new FloatProperty(Identifier.of("geyser:s_y"), MAX_VALUE, MIN_VALUE, 0F), rigScale.getY());
+        propertyManager.addProperty(new FloatProperty(Identifier.of("geyser:s_z"), MAX_VALUE, MIN_VALUE, 0F), rigScale.getZ());
+    }
+
+    protected float uniformScale() {
+        return (scale.getX() + scale.getY() + scale.getZ()) / 3;
     }
 
     protected void applyScale() {

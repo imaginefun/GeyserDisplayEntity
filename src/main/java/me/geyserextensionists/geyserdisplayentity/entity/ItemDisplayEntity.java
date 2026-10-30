@@ -330,7 +330,11 @@ public class ItemDisplayEntity extends SlotDisplayEntity {
     public void setScale(EntityMetadata<Vector3f, ?> entityMetadata) {
         scaleMetadata = entityMetadata;
         javaScale = entityMetadata.getValue();
-        if (kind == Kind.ITEM_RIG) super.setScale(entityMetadata);
+        if (kind != Kind.ITEM_RIG) return;
+        super.setScale(entityMetadata);
+        if (valid && config != null && config.getBoolean("vanilla-scale")) {
+            moveAbsoluteRaw(position, getYaw(), getPitch(), getHeadYaw(), isOnGround(), false);
+        }
     }
 
     @Override
@@ -485,7 +489,10 @@ public class ItemDisplayEntity extends SlotDisplayEntity {
         }
 
         if (config == null) return super.bedrockPosition();
-        return super.bedrockPosition().up((float) config.getDouble("y-offset"));
+        float yOffset = (float) config.getDouble("y-offset");
+        // Bedrock grows a scaled entity from its feet, Java grows the item from its centre
+        if (config.getBoolean("vanilla-scale")) yOffset *= uniformScale();
+        return super.bedrockPosition().up(yOffset);
     }
 
     public void setDisplayedItem(EntityMetadata<ItemStack, ?> entityMetadata) {
